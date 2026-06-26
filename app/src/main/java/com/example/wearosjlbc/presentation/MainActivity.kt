@@ -45,7 +45,7 @@ fun WearAppNavigation() {
     SwipeDismissableNavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController = navController) }
         composable("app_launcher") { AppLauncherScreen(navController = navController) }
-        composable("app") { DummyScreen("App Screen") }
+        composable("app") { DummyScreen("App Screen") { navController.popBackStack() } }
     }
 }
 
@@ -305,11 +305,12 @@ fun AppIcon(drawableId: Int, onClick: () -> Unit) {
 }
 
 @Composable
-fun DummyScreen(title: String) {
+fun DummyScreen(title: String, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(Color.Black)
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
