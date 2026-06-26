@@ -45,7 +45,7 @@ fun WearAppNavigation() {
     SwipeDismissableNavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController = navController) }
         composable("app_launcher") { AppLauncherScreen(navController = navController) }
-        composable("textmind") { DummyScreen("Text Mind") }
+        composable("app") { DummyScreen("App Screen") }
     }
 }
 
@@ -234,7 +234,7 @@ fun AppLauncherScreen(navController: NavController) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AppIcon(drawableId = R.drawable.icongoogle) { navController.navigate("textmind") }
+            AppIcon(drawableId = R.drawable.icongoogle) { navController.navigate("app") }
             AppIcon(drawableId = R.drawable.iconwhatsapp) { /* Acción vacía */ }
             AppIcon(drawableId = R.drawable.iconsgoogleplay) { /* Acción vacía */ }
         }
