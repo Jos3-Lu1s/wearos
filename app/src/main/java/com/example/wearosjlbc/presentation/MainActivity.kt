@@ -29,8 +29,6 @@ import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import com.example.wearosjlbc.R
 
-
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +45,7 @@ fun WearAppNavigation() {
     SwipeDismissableNavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController = navController) }
         composable("app_launcher") { AppLauncherScreen(navController = navController) }
-
-        composable("lock") { DummyScreen("Lock Screen", navController) }
-        composable("previous") { DummyScreen("Previous", navController) }
-        composable("next") { DummyScreen("Next", navController) }
-        composable("textmind") { DummyScreen("Text Mind", navController) }
-        composable("calculator") { DummyScreen("Calculator", navController) }
+        composable("textmind") { DummyScreen("Text Mind") }
     }
 }
 
@@ -312,7 +305,7 @@ fun AppIcon(drawableId: Int, onClick: () -> Unit) {
 }
 
 @Composable
-fun DummyScreen(title: String, navController: NavController) {
+fun DummyScreen(title: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
