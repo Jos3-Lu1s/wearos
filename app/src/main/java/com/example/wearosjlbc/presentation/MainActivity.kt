@@ -178,7 +178,7 @@ fun CompassComplication() {
         modifier = Modifier
             .size(56.dp)
             .clip(CircleShape)
-            .background(BgColorFace),
+            .background(ComplicationBg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -211,7 +211,7 @@ fun WeatherComplication() {
         Icon(
             painter = painterResource(id = R.drawable.ic_weather),
             contentDescription = "Weather",
-            tint = Color.Unspecified,
+            tint = PrimaryBlue,
             modifier = Modifier.size(28.dp)
         )
     }
