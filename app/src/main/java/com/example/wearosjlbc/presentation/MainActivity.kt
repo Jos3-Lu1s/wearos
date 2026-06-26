@@ -21,10 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material3.Text
-import androidx.wear.compose.navigation.SwipeDismissableNavHost
-import androidx.wear.compose.navigation.composable
-import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import com.example.wearosjlbc.R
@@ -40,9 +40,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WearAppNavigation() {
-    val navController = rememberSwipeDismissableNavController()
+    val navController = rememberNavController()
 
-    SwipeDismissableNavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController = navController) }
         composable("app_launcher") { AppLauncherScreen(navController = navController) }
         composable("app") { DummyScreen("App Screen") { navController.popBackStack() } }
