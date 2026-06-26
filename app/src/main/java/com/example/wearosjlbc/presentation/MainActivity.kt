@@ -15,12 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
@@ -82,10 +82,10 @@ fun HomeScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.offset(y = (-4).dp)
         ) {
-            Icon(
+            Image(
                 painter = painterResource(id = R.drawable.ic_shoe),
                 contentDescription = "Pasos",
-                tint = Color(0xFF0056D2),
+                colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -152,10 +152,10 @@ fun HeartRateComplication() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
+        Image(
             painter = painterResource(id = R.drawable.ic_heart),
             contentDescription = "Heart Rate",
-            tint = Color(0xFF0056D2),
+            colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
@@ -178,10 +178,10 @@ fun CompassComplication() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
+        Image(
             painter = painterResource(id = R.drawable.ic_compass_with_ticks),
             contentDescription = "Compass",
-            tint = Color(0xFF0056D2),
+            colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
@@ -204,10 +204,10 @@ fun WeatherComplication() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
+        Image(
             painter = painterResource(id = R.drawable.ic_weather),
             contentDescription = "Weather",
-            tint = Color(0xFF0056D2),
+            colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
             modifier = Modifier.size(28.dp)
         )
     }
