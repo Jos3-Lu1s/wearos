@@ -232,6 +232,7 @@ fun AppLauncherScreen(navController: NavController) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
+                .clickable { navController.popBackStack() }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
