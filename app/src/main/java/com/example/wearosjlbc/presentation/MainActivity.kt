@@ -29,11 +29,7 @@ import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import com.example.wearosjlbc.R
 
-// --- Paleta de Colores ---
-val BgColorFace = Color(0xFFDCE4EF)
-val PrimaryBlue = Color(0xFF0056D2)
-val ComplicationBg = Color(0xFFC2D8ED)
-val AppLauncherBg = Color(0xFF1E1E1E)
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,18 +61,18 @@ fun HomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgColorFace)
+            .background(Color(0xFFDCE4EF))
             .clickable { navController.navigate("app_launcher") },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "JUE 25", color = PrimaryBlue, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text(text = "JUE 25", color = Color(0xFF0056D2), fontWeight = FontWeight.Bold, fontSize = 16.sp)
 
         Text(
             text = "02:08:59",
-            color = PrimaryBlue,
+            color = Color(0xFF0056D2),
             fontWeight = FontWeight.Medium,
             fontSize = 42.sp,
             modifier = Modifier.offset(y = (-4).dp)
@@ -89,13 +85,13 @@ fun HomeScreen(navController: NavController) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_shoe),
                 contentDescription = "Pasos",
-                tint = PrimaryBlue,
+                tint = Color(0xFF0056D2),
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "Pasos 4,786",
-                color = PrimaryBlue,
+                color = Color(0xFF0056D2),
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp
             )
@@ -137,11 +133,11 @@ fun ActivityGraph() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("12AM", color = PrimaryBlue, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-            Text("6", color = PrimaryBlue, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-            Text("12PM", color = PrimaryBlue, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-            Text("6", color = PrimaryBlue, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-            Text("(h)", color = PrimaryBlue, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Text("12AM", color = Color(0xFF0056D2), fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Text("6", color = Color(0xFF0056D2), fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Text("12PM", color = Color(0xFF0056D2), fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Text("6", color = Color(0xFF0056D2), fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Text("(h)", color = Color(0xFF0056D2), fontSize = 10.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
@@ -152,20 +148,20 @@ fun HeartRateComplication() {
         modifier = Modifier
             .size(54.dp)
             .clip(CircleShape)
-            .background(ComplicationBg),
+            .background(Color(0xFFC2D8ED)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_heart),
             contentDescription = "Heart Rate",
-            tint = PrimaryBlue,
+            tint = Color(0xFF0056D2),
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = "102",
-            color = PrimaryBlue,
+            color = Color(0xFF0056D2),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )
@@ -178,20 +174,20 @@ fun CompassComplication() {
         modifier = Modifier
             .size(56.dp)
             .clip(CircleShape)
-            .background(ComplicationBg),
+            .background(Color(0xFFC2D8ED)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_compass_with_ticks),
             contentDescription = "Compass",
-            tint = PrimaryBlue,
+            tint = Color(0xFF0056D2),
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = "334°",
-            color = PrimaryBlue,
+            color = Color(0xFF0056D2),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold
         )
@@ -204,14 +200,14 @@ fun WeatherComplication() {
         modifier = Modifier
             .size(54.dp)
             .clip(CircleShape)
-            .background(ComplicationBg),
+            .background(Color(0xFFC2D8ED)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_weather),
             contentDescription = "Weather",
-            tint = PrimaryBlue,
+            tint = Color(0xFF0056D2),
             modifier = Modifier.size(28.dp)
         )
     }
@@ -224,7 +220,7 @@ fun AppLauncherScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppLauncherBg)
+            .background(Color(0xFF1E1E1E))
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
