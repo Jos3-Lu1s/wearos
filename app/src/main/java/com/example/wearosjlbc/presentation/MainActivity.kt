@@ -3,7 +3,6 @@ package com.example.wearosjlbc.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,12 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -334,24 +328,10 @@ fun DummyScreen(title: String, onClick: () -> Unit) {
 
 @Composable
 fun CalculatorScreen() {
-    // Paleta de colores exacta extraída de la UI de Samsung
-    val bgDark = Color(0xFF000000)
-    val btnRed = Color(0xFFE55541)       // Rojo Samsung
-    val btnDarkGray = Color(0xFF333333)  // Gris oscuro (Operadores)
-    val btnNumGray = Color(0xFF181818)   // Casi negro (Números)
-    val textGreen = Color(0xFF7AE142)    // Verde brillante
-    val btnGreen = Color(0xFF388E3C)     // Verde oscuro (=)
-
-    // Ajustamos ancho y alto para hacer botones "Píldora/Óvalo"
-    // Esto evita que se corten arriba y abajo, dejando espacio para la pantalla
-    val btnWidth = 36.dp
-    val btnHeight = 24.dp
-    val btnSpacing = 4.dp
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgDark)
+            .background(Color(0xFF000000))
             .padding(horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -397,49 +377,49 @@ fun CalculatorScreen() {
         Spacer(modifier = Modifier.height(4.dp))
 
         // --- 2. Línea Divisora ---
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .height(1.dp)
                 .background(Color(0xFF333333))
-        )
+        ) {}
 
         Spacer(modifier = Modifier.height(6.dp))
 
         // --- 3. Grid del Teclado ---
         Column(
-            verticalArrangement = Arrangement.spacedBy(btnSpacing),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
-                CalculatorButton("C", btnRed, Color.White, btnWidth, btnHeight)
-                CalculatorButton("1/2", btnDarkGray, textGreen, btnWidth, btnHeight)
-                CalculatorButton("÷", btnDarkGray, textGreen, btnWidth, btnHeight)
-                CalculatorButton("×", btnDarkGray, textGreen, btnWidth, btnHeight)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CalculatorButton("C", Color(0xFFE55541), Color.White, 36.dp, 24.dp)
+                CalculatorButton("1/2", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
+                CalculatorButton("÷", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
+                CalculatorButton("×", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
-                CalculatorButton("7", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("8", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("9", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("-", btnDarkGray, textGreen, btnWidth, btnHeight)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CalculatorButton("7", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("8", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("9", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("-", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
-                CalculatorButton("4", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("5", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("6", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("+", btnDarkGray, textGreen, btnWidth, btnHeight)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CalculatorButton("4", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("5", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("6", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("+", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
-                CalculatorButton("1", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("2", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("3", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton("=", btnGreen, Color.White, btnWidth, btnHeight)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CalculatorButton("1", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("2", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("3", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("=", Color(0xFF388E3C), Color.White, 36.dp, 24.dp)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
-                Spacer(modifier = Modifier.width(btnWidth))
-                CalculatorButton("0", btnNumGray, Color.White, btnWidth, btnHeight)
-                CalculatorButton(".", btnNumGray, Color.White, btnWidth, btnHeight)
-                Spacer(modifier = Modifier.width(btnWidth))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Spacer(modifier = Modifier.width(36.dp))
+                CalculatorButton("0", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton(".", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                Spacer(modifier = Modifier.width(36.dp))
             }
         }
     }
@@ -453,8 +433,9 @@ fun CalculatorButton(
     width: Dp,
     height: Dp
 ) {
-    Box(
-        contentAlignment = Alignment.Center,
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .size(width = width, height = height)
             .clip(RoundedCornerShape(percent = 50)) // Forma de píldora
