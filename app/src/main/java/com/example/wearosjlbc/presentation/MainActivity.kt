@@ -1,5 +1,6 @@
 package com.example.wearosjlbc.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
@@ -225,6 +227,7 @@ fun WeatherComplication() {
 @Composable
 fun AppLauncherScreen(navController: NavController) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -251,8 +254,40 @@ fun AppLauncherScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppIcon(drawableId = R.drawable.icongoogle) { navController.navigate("app") }
-            AppIcon(drawableId = R.drawable.iconwhatsapp) { /* Acción vacía */ }
-            AppIcon(drawableId = R.drawable.iconsgoogleplay) { /* Acción vacía */ }
+            AppIcon(drawableId = R.drawable.iconwhatsapp) {
+                try {
+                    val intent = context.packageManager.getLaunchIntentForPackage("com.whatsapp")
+                    if (intent != null) {
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        context.startActivity(intent)
+                    } else {
+                        val intentFallback = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("whatsapp://send")).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intentFallback)
+                    }
+                } catch (e: Exception) {
+                    try {
+                        val intentFallback = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("whatsapp://send")).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intentFallback)
+                    } catch (ex: Exception) {
+                        // Fallback
+                    }
+                }
+            }
+            AppIcon(drawableId = R.drawable.iconsgoogleplay) {
+                try {
+                    val intent = context.packageManager.getLaunchIntentForPackage("com.android.vending")
+                    if (intent != null) {
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        context.startActivity(intent)
+                    }
+                } catch (e: Exception) {
+                    // Fallback
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -284,7 +319,16 @@ fun AppLauncherScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppIcon(drawableId = R.drawable.iconscalendario) { /* Acción vacía */ }
-            AppIcon(drawableId = R.drawable.iconsajustes) { /* Acción vacía */ }
+            AppIcon(drawableId = R.drawable.iconsajustes) {
+                try {
+                    val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    // Fallback
+                }
+            }
             AppIcon(drawableId = R.drawable.iconscalculadora) { navController.navigate("calculator") }
         }
 
@@ -295,8 +339,43 @@ fun AppLauncherScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppIcon(drawableId = R.drawable.iconsnublado) { /* Acción vacía */ }
-            AppIcon(drawableId = R.drawable.icons8mensajes) { /* Acción vacía */ }
-            AppIcon(drawableId = R.drawable.iconsllamada) { /* Acción vacía */ }
+            AppIcon(drawableId = R.drawable.icons8mensajes) {
+                try {
+                    val pm = context.packageManager
+                    val knownPackages = listOf(
+                        "com.google.android.apps.messaging",
+                        "com.samsung.android.messaging"
+                    )
+                    var launched = false
+                    for (pkg in knownPackages) {
+                        val launchIntent = pm.getLaunchIntentForPackage(pkg)
+                        if (launchIntent != null) {
+                            context.startActivity(launchIntent)
+                            launched = true
+                            break
+                        }
+                    }
+                    if (!launched) {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = android.net.Uri.parse("smsto:")
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    }
+                } catch (e: Exception) {
+                    // Fallback
+                }
+            }
+            AppIcon(drawableId = R.drawable.iconsllamada) {
+                try {
+                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    // Fallback
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
