@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.net.toUri
+import kotlin.math.sqrt
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +27,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -258,21 +259,16 @@ fun AppLauncherScreen(navController: NavController) {
                 try {
                     val intent = context.packageManager.getLaunchIntentForPackage("com.whatsapp")
                     if (intent != null) {
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         context.startActivity(intent)
                     } else {
-                        val intentFallback = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("whatsapp://send")).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
+                        val intentFallback = Intent(Intent.ACTION_VIEW, "whatsapp://send".toUri())
                         context.startActivity(intentFallback)
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     try {
-                        val intentFallback = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("whatsapp://send")).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
+                        val intentFallback = Intent(Intent.ACTION_VIEW, "whatsapp://send".toUri())
                         context.startActivity(intentFallback)
-                    } catch (ex: Exception) {
+                    } catch (_: Exception) {
                         // Fallback
                     }
                 }
@@ -281,10 +277,9 @@ fun AppLauncherScreen(navController: NavController) {
                 try {
                     val intent = context.packageManager.getLaunchIntentForPackage("com.android.vending")
                     if (intent != null) {
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         context.startActivity(intent)
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Fallback
                 }
             }
@@ -321,11 +316,9 @@ fun AppLauncherScreen(navController: NavController) {
             AppIcon(drawableId = R.drawable.iconscalendario) { /* Acción vacía */ }
             AppIcon(drawableId = R.drawable.iconsajustes) {
                 try {
-                    val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
+                    val intent = Intent(android.provider.Settings.ACTION_SETTINGS)
                     context.startActivity(intent)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Fallback
                 }
             }
@@ -357,22 +350,19 @@ fun AppLauncherScreen(navController: NavController) {
                     }
                     if (!launched) {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = android.net.Uri.parse("smsto:")
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            data = "smsto:".toUri()
                         }
                         context.startActivity(intent)
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Fallback
                 }
             }
             AppIcon(drawableId = R.drawable.iconsllamada) {
                 try {
-                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
+                    val intent = Intent(Intent.ACTION_DIAL)
                     context.startActivity(intent)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Fallback
                 }
             }
@@ -488,12 +478,10 @@ fun evaluateExpression(expr: String): String {
                 val op = midTokens[j]
                 if (j + 1 >= midTokens.size) throw Exception("Error")
                 val nextVal = midTokens[j + 1].toDoubleOrNull() ?: throw Exception("Error")
-                finalResult = if (op == "+") {
-                    finalResult + nextVal
-                } else if (op == "-") {
-                    finalResult - nextVal
-                } else {
-                    throw Exception("Error")
+                finalResult = when (op) {
+                    "+" -> finalResult + nextVal
+                    "-" -> finalResult - nextVal
+                    else -> throw Exception("Error")
                 }
                 j += 2
             }
@@ -509,7 +497,7 @@ fun evaluateExpression(expr: String): String {
                 val valStr = match.groupValues[1]
                 val value = valStr.toDoubleOrNull() ?: return "Error"
                 if (value < 0.0) return "Error"
-                val sqrtVal = Math.sqrt(value)
+                val sqrtVal = sqrt(value)
                 tempExpr = tempExpr.replaceFirst("√$valStr", sqrtVal.toString())
             } else {
                 break
@@ -531,7 +519,7 @@ fun evaluateExpression(expr: String): String {
             // Check if there is a '√' right before this parenthesis, e.g. "√(subExpr)"
             if (openIdx > 0 && tempExpr[openIdx - 1] == '√') {
                 if (subResult < 0.0) return "Error"
-                val sqrtVal = Math.sqrt(subResult)
+                val sqrtVal = sqrt(subResult)
                 tempExpr = tempExpr.substring(0, openIdx - 1) + sqrtVal.toString() + tempExpr.substring(closeIdx + 1)
             } else {
                 tempExpr = tempExpr.substring(0, openIdx) + subResult.toString() + tempExpr.substring(closeIdx + 1)
@@ -545,7 +533,7 @@ fun evaluateExpression(expr: String): String {
                 val valStr = match.groupValues[1]
                 val value = valStr.toDoubleOrNull() ?: return "Error"
                 if (value < 0.0) return "Error"
-                val sqrtVal = Math.sqrt(value)
+                val sqrtVal = sqrt(value)
                 tempExpr = tempExpr.replaceFirst("√$valStr", sqrtVal.toString())
             } else {
                 return "Error"
@@ -559,7 +547,7 @@ fun evaluateExpression(expr: String): String {
             val formatted = String.format(java.util.Locale.US, "%.8f", finalVal)
             formatted.replace(Regex("0+$"), "").replace(Regex("\\.$"), "")
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         return "Error"
     }
 }
@@ -587,11 +575,7 @@ fun CalculatorScreen() {
                 val openCount = expression.count { it == '(' }
                 val closeCount = expression.count { it == ')' }
                 val lastChar = expression.lastOrNull()
-                if (openCount > closeCount && lastChar != null && (lastChar.isDigit() || lastChar == ')')) {
-                    expression += ")"
-                } else {
-                    expression += "("
-                }
+                expression += if (openCount > closeCount && lastChar != null && (lastChar.isDigit() || lastChar == ')')) ")" else "("
             }
             "%" -> {
                 if (isShowingResult) {
@@ -610,19 +594,18 @@ fun CalculatorScreen() {
                     if (match != null) {
                         val (op, num) = match.destructured
                         val prefix = expression.substring(0, match.range.first)
-                        if (op == "-") {
-                            val prefixLast = prefix.lastOrNull()
-                            if (prefixLast in listOf('+', '-', '×', '÷') || prefix.isEmpty()) {
-                                expression = prefix + num
-                            } else {
-                                expression = prefix + "+-" + num
+                        expression = when (op) {
+                            "-" -> {
+                                val prefixLast = prefix.lastOrNull()
+                                if (prefixLast in listOf('+', '-', '×', '÷') || prefix.isEmpty()) {
+                                    "$prefix$num"
+                                } else {
+                                    "$prefix+-$num"
+                                }
                             }
-                        } else if (op == "+") {
-                            expression = prefix + "-" + num
-                        } else if (op in listOf("×", "÷")) {
-                            expression = prefix + op + "-" + num
-                        } else {
-                            expression = "-" + num
+                            "+" -> "$prefix-$num"
+                            "×", "÷" -> "$prefix$op-$num"
+                            else -> "-$num"
                         }
                     }
                 } else {
@@ -656,10 +639,10 @@ fun CalculatorScreen() {
                 }
                 if (expression.isNotEmpty()) {
                     val lastChar = expression.last().toString()
-                    if (lastChar in listOf("+", "-", "×", "÷")) {
-                        expression = expression.dropLast(1) + value
+                    expression = if (lastChar in listOf("+", "-", "×", "÷")) {
+                        "${expression.dropLast(1)}$value"
                     } else {
-                        expression += value
+                        expression + value
                     }
                 } else if (value == "-") {
                     expression = "-"
