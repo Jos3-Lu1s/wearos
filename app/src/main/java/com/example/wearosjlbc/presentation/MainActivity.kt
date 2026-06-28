@@ -3,21 +3,29 @@ package com.example.wearosjlbc.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -45,9 +53,14 @@ fun WearAppNavigation() {
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController = navController) }
         composable("app_launcher") { AppLauncherScreen(navController = navController) }
+        composable("calculator") { CalculatorScreen() }
         composable("app") { DummyScreen("App Screen") { navController.popBackStack() } }
     }
 }
+
+// -------------------------------------------------------------
+// PANTALLAS EXISTENTES (HOME & LAUNCHER)
+// -------------------------------------------------------------
 
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -78,7 +91,7 @@ fun HomeScreen(navController: NavController) {
             Image(
                 painter = painterResource(id = R.drawable.ic_shoe),
                 contentDescription = "Pasos",
-                colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF0056D2)),
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -148,7 +161,7 @@ fun HeartRateComplication() {
         Image(
             painter = painterResource(id = R.drawable.ic_heart),
             contentDescription = "Heart Rate",
-            colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF0056D2)),
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
@@ -174,7 +187,7 @@ fun CompassComplication() {
         Image(
             painter = painterResource(id = R.drawable.ic_compass_with_ticks),
             contentDescription = "Compass",
-            colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF0056D2)),
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
@@ -200,7 +213,7 @@ fun WeatherComplication() {
         Image(
             painter = painterResource(id = R.drawable.ic_weather),
             contentDescription = "Weather",
-            colorFilter = ColorFilter.tint(Color(0xFF0056D2)),
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF0056D2)),
             modifier = Modifier.size(28.dp)
         )
     }
@@ -269,7 +282,7 @@ fun AppLauncherScreen(navController: NavController) {
         ) {
             AppIcon(drawableId = R.drawable.iconscalendario) { /* Acción vacía */ }
             AppIcon(drawableId = R.drawable.iconsajustes) { /* Acción vacía */ }
-            AppIcon(drawableId = R.drawable.iconscalculadora) { /* Acción vacía */ }
+            AppIcon(drawableId = R.drawable.iconscalculadora) { navController.navigate("calculator") }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -287,9 +300,6 @@ fun AppLauncherScreen(navController: NavController) {
     }
 }
 
-// -------------------------------------------------------------
-// AQUÍ ESTÁ LA MAGIA DEL FONDO BLANCO
-// -------------------------------------------------------------
 @Composable
 fun AppIcon(drawableId: Int, onClick: () -> Unit) {
     Image(
@@ -298,9 +308,9 @@ fun AppIcon(drawableId: Int, onClick: () -> Unit) {
         modifier = Modifier
             .size(60.dp)
             .clip(CircleShape)
-            .background(Color.White) // 1. Agregamos el fondo blanco
+            .background(Color.White)
             .clickable { onClick() }
-            .padding(10.dp) // 2. Agregamos padding para que la imagen quede dentro de la esfera
+            .padding(10.dp)
     )
 }
 
@@ -317,6 +327,150 @@ fun DummyScreen(title: String, onClick: () -> Unit) {
         Text(text = title, color = Color.White, fontSize = 20.sp)
     }
 }
+
+// -------------------------------------------------------------
+// PANTALLA DE CALCULADORA (DISEÑO SAMSUNG GALAXY WATCH 7)
+// -------------------------------------------------------------
+
+@Composable
+fun CalculatorScreen() {
+    // Paleta de colores exacta extraída de la UI de Samsung
+    val bgDark = Color(0xFF000000)
+    val btnRed = Color(0xFFE55541)       // Rojo Samsung
+    val btnDarkGray = Color(0xFF333333)  // Gris oscuro (Operadores)
+    val btnNumGray = Color(0xFF181818)   // Casi negro (Números)
+    val textGreen = Color(0xFF7AE142)    // Verde brillante
+    val btnGreen = Color(0xFF388E3C)     // Verde oscuro (=)
+
+    // Ajustamos ancho y alto para hacer botones "Píldora/Óvalo"
+    // Esto evita que se corten arriba y abajo, dejando espacio para la pantalla
+    val btnWidth = 36.dp
+    val btnHeight = 24.dp
+    val btnSpacing = 4.dp
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bgDark)
+            .padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // --- 1. Área Superior (Historial, Resultado, Borrar) ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.history),
+                contentDescription = "Historial",
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF666666)),
+                modifier = Modifier.size(18.dp)
+            )
+
+            Text(
+                text = "0",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.backspace),
+                contentDescription = "Eliminar",
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF7AE142)),
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { /* Acción borrar */ }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // --- 2. Línea Divisora ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .height(1.dp)
+                .background(Color(0xFF333333))
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // --- 3. Grid del Teclado ---
+        Column(
+            verticalArrangement = Arrangement.spacedBy(btnSpacing),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
+                CalculatorButton("C", btnRed, Color.White, btnWidth, btnHeight)
+                CalculatorButton("1/2", btnDarkGray, textGreen, btnWidth, btnHeight)
+                CalculatorButton("÷", btnDarkGray, textGreen, btnWidth, btnHeight)
+                CalculatorButton("×", btnDarkGray, textGreen, btnWidth, btnHeight)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
+                CalculatorButton("7", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("8", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("9", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("-", btnDarkGray, textGreen, btnWidth, btnHeight)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
+                CalculatorButton("4", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("5", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("6", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("+", btnDarkGray, textGreen, btnWidth, btnHeight)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
+                CalculatorButton("1", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("2", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("3", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton("=", btnGreen, Color.White, btnWidth, btnHeight)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(btnSpacing)) {
+                Spacer(modifier = Modifier.width(btnWidth))
+                CalculatorButton("0", btnNumGray, Color.White, btnWidth, btnHeight)
+                CalculatorButton(".", btnNumGray, Color.White, btnWidth, btnHeight)
+                Spacer(modifier = Modifier.width(btnWidth))
+            }
+        }
+    }
+}
+
+@Composable
+fun CalculatorButton(
+    text: String,
+    backgroundColor: Color,
+    textColor: Color,
+    width: Dp,
+    height: Dp
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(width = width, height = height)
+            .clip(RoundedCornerShape(percent = 50)) // Forma de píldora
+            .background(backgroundColor)
+            .clickable { /* Acción del número/operador */ }
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = if (text == "1/2") 13.sp else 18.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+
 
 @WearPreviewDevices
 @WearPreviewFontScales
