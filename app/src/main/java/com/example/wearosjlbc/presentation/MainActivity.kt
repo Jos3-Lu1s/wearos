@@ -12,6 +12,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +23,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -326,8 +335,274 @@ fun DummyScreen(title: String, onClick: () -> Unit) {
 // PANTALLA DE CALCULADORA (DISEÑO SAMSUNG GALAXY WATCH 7)
 // -------------------------------------------------------------
 
+fun evaluateExpression(expr: String): String {
+    try {
+        if (expr.isEmpty()) return "0"
+        
+        // Remove trailing operators for friendly auto-completion
+        var clean = expr.trim()
+        while (clean.isNotEmpty() && (clean.last() in listOf('+', '-', '×', '÷') || clean.last().toString() in listOf("+", "-", "*", "/"))) {
+            clean = clean.dropLast(1)
+        }
+        if (clean.isEmpty()) return "0"
+
+        // Replace percentage with /100* if followed by digit or parenthesis or √, else /100
+        clean = clean.replace(Regex("%(?=[0-9.(√])"), "/100*")
+        clean = clean.replace("%", "/100")
+        
+        // Helper to evaluate expression without parentheses
+        fun evalSimple(simpleExpr: String): Double {
+            val cleanSimple = simpleExpr.replace("×", "*").replace("÷", "/")
+            val tokens = mutableListOf<String>()
+            var currentNumber = StringBuilder()
+            
+            var i = 0
+            while (i < cleanSimple.length) {
+                val char = cleanSimple[i]
+                if (char.isDigit() || char == '.') {
+                    currentNumber.append(char)
+                } else if (char == '+' || char == '-' || char == '*' || char == '/') {
+                    if (currentNumber.isNotEmpty()) {
+                        tokens.add(currentNumber.toString())
+                        currentNumber = StringBuilder()
+                    } else if (char == '-' && (tokens.isEmpty() || tokens.last() in listOf("+", "-", "*", "/"))) {
+                        currentNumber.append(char)
+                        i++
+                        continue
+                    }
+                    tokens.add(char.toString())
+                }
+                i++
+            }
+            if (currentNumber.isNotEmpty()) {
+                tokens.add(currentNumber.toString())
+            }
+            
+            if (tokens.isEmpty()) return 0.0
+            
+            // Precedence: * and /
+            val midTokens = mutableListOf<String>()
+            var idx = 0
+            while (idx < tokens.size) {
+                val token = tokens[idx]
+                if (token == "*" || token == "/") {
+                    if (midTokens.isEmpty() || idx + 1 >= tokens.size) throw Exception("Error")
+                    val left = midTokens.removeAt(midTokens.size - 1).toDoubleOrNull() ?: throw Exception("Error")
+                    val right = tokens[idx + 1].toDoubleOrNull() ?: throw Exception("Error")
+                    val res = if (token == "*") left * right else {
+                        if (right == 0.0) throw Exception("Error")
+                        left / right
+                    }
+                    midTokens.add(res.toString())
+                    idx += 2
+                } else {
+                    midTokens.add(token)
+                    idx++
+                }
+            }
+            
+            // Precedence: + and -
+            if (midTokens.isEmpty()) return 0.0
+            var finalResult = midTokens[0].toDoubleOrNull() ?: throw Exception("Error")
+            var j = 1
+            while (j < midTokens.size) {
+                val op = midTokens[j]
+                if (j + 1 >= midTokens.size) throw Exception("Error")
+                val nextVal = midTokens[j + 1].toDoubleOrNull() ?: throw Exception("Error")
+                finalResult = if (op == "+") {
+                    finalResult + nextVal
+                } else if (op == "-") {
+                    finalResult - nextVal
+                } else {
+                    throw Exception("Error")
+                }
+                j += 2
+            }
+            return finalResult
+        }
+        
+        // Handle square root first if it is of the form √num or √(expr)
+        // Resolve simple √num (like √9 -> 3)
+        var tempExpr = clean
+        while (tempExpr.contains("√")) {
+            val match = Regex("√([0-9.]+)").find(tempExpr)
+            if (match != null) {
+                val valStr = match.groupValues[1]
+                val value = valStr.toDoubleOrNull() ?: return "Error"
+                if (value < 0.0) return "Error"
+                val sqrtVal = Math.sqrt(value)
+                tempExpr = tempExpr.replaceFirst("√$valStr", sqrtVal.toString())
+            } else {
+                break
+            }
+        }
+        
+        // Recursively solve innermost parentheses
+        while (tempExpr.contains("(")) {
+            val openIdx = tempExpr.lastIndexOf("(")
+            val closeIdx = tempExpr.indexOf(")", openIdx)
+            if (closeIdx == -1) {
+                // Auto-close missing parenthesis
+                tempExpr += ")"
+                continue
+            }
+            val subExpr = tempExpr.substring(openIdx + 1, closeIdx)
+            val subResult = evalSimple(subExpr)
+            
+            // Check if there is a '√' right before this parenthesis, e.g. "√(subExpr)"
+            if (openIdx > 0 && tempExpr[openIdx - 1] == '√') {
+                if (subResult < 0.0) return "Error"
+                val sqrtVal = Math.sqrt(subResult)
+                tempExpr = tempExpr.substring(0, openIdx - 1) + sqrtVal.toString() + tempExpr.substring(closeIdx + 1)
+            } else {
+                tempExpr = tempExpr.substring(0, openIdx) + subResult.toString() + tempExpr.substring(closeIdx + 1)
+            }
+        }
+        
+        // Clean remaining square roots (after parenthesis evaluation)
+        while (tempExpr.contains("√")) {
+            val match = Regex("√([0-9.]+)").find(tempExpr)
+            if (match != null) {
+                val valStr = match.groupValues[1]
+                val value = valStr.toDoubleOrNull() ?: return "Error"
+                if (value < 0.0) return "Error"
+                val sqrtVal = Math.sqrt(value)
+                tempExpr = tempExpr.replaceFirst("√$valStr", sqrtVal.toString())
+            } else {
+                return "Error"
+            }
+        }
+        
+        val finalVal = evalSimple(tempExpr)
+        return if (finalVal % 1.0 == 0.0) {
+            finalVal.toLong().toString()
+        } else {
+            val formatted = String.format(java.util.Locale.US, "%.8f", finalVal)
+            formatted.replace(Regex("0+$"), "").replace(Regex("\\.$"), "")
+        }
+    } catch (e: Exception) {
+        return "Error"
+    }
+}
+
 @Composable
 fun CalculatorScreen() {
+    var expression by remember { mutableStateOf("") }
+    var isShowingResult by remember { mutableStateOf(false) }
+    var isPage2 by remember { mutableStateOf(false) }
+
+    fun handleButtonClick(value: String) {
+        when (value) {
+            "C" -> {
+                expression = ""
+                isShowingResult = false
+            }
+            "1/2", "2/2" -> {
+                isPage2 = !isPage2
+            }
+            "()" -> {
+                if (isShowingResult) {
+                    expression = ""
+                    isShowingResult = false
+                }
+                val openCount = expression.count { it == '(' }
+                val closeCount = expression.count { it == ')' }
+                val lastChar = expression.lastOrNull()
+                if (openCount > closeCount && lastChar != null && (lastChar.isDigit() || lastChar == ')')) {
+                    expression += ")"
+                } else {
+                    expression += "("
+                }
+            }
+            "%" -> {
+                if (isShowingResult) {
+                    isShowingResult = false
+                }
+                if (expression.isNotEmpty() && expression.last().isDigit()) {
+                    expression += "%"
+                }
+            }
+            "+/-" -> {
+                if (isShowingResult) {
+                    isShowingResult = false
+                }
+                if (expression.isNotEmpty()) {
+                    val match = Regex("([+\\-×÷]?)([0-9.]+)$").find(expression)
+                    if (match != null) {
+                        val (op, num) = match.destructured
+                        val prefix = expression.substring(0, match.range.first)
+                        if (op == "-") {
+                            val prefixLast = prefix.lastOrNull()
+                            if (prefixLast in listOf('+', '-', '×', '÷') || prefix.isEmpty()) {
+                                expression = prefix + num
+                            } else {
+                                expression = prefix + "+-" + num
+                            }
+                        } else if (op == "+") {
+                            expression = prefix + "-" + num
+                        } else if (op in listOf("×", "÷")) {
+                            expression = prefix + op + "-" + num
+                        } else {
+                            expression = "-" + num
+                        }
+                    }
+                } else {
+                    expression = "-"
+                }
+            }
+            "√" -> {
+                if (isShowingResult) {
+                    expression = ""
+                    isShowingResult = false
+                }
+                expression += "√"
+            }
+            "=" -> {
+                if (expression.isNotEmpty()) {
+                    expression = evaluateExpression(expression)
+                    isShowingResult = true
+                }
+            }
+            "backspace" -> {
+                if (isShowingResult) {
+                    expression = ""
+                    isShowingResult = false
+                } else if (expression.isNotEmpty()) {
+                    expression = expression.dropLast(1)
+                }
+            }
+            "+", "-", "×", "÷" -> {
+                if (isShowingResult) {
+                    isShowingResult = false
+                }
+                if (expression.isNotEmpty()) {
+                    val lastChar = expression.last().toString()
+                    if (lastChar in listOf("+", "-", "×", "÷")) {
+                        expression = expression.dropLast(1) + value
+                    } else {
+                        expression += value
+                    }
+                } else if (value == "-") {
+                    expression = "-"
+                }
+            }
+            else -> { // Digits and decimal point
+                if (isShowingResult) {
+                    expression = ""
+                    isShowingResult = false
+                }
+                if (value == ".") {
+                    val lastNumberToken = expression.split(Regex("[+\\-×÷()√%]")).lastOrNull() ?: ""
+                    if (!lastNumberToken.contains(".")) {
+                        expression += if (lastNumberToken.isEmpty()) "0." else "."
+                    }
+                } else {
+                    expression += value
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -354,11 +629,30 @@ fun CalculatorScreen() {
             )
 
             Text(
-                text = "0",
-                color = Color.White,
+                text = buildAnnotatedString {
+                    if (isShowingResult) {
+                        withStyle(style = SpanStyle(color = Color(0xFF7AE142))) {
+                            append(expression.ifEmpty { "0" })
+                        }
+                    } else {
+                        val displayExpr = expression.ifEmpty { "0" }
+                        for (char in displayExpr) {
+                            val color = if (char in listOf('+', '-', '×', '÷', '(', ')', '%', '√')) {
+                                Color(0xFF7AE142)
+                            } else {
+                                Color.White
+                            }
+                            withStyle(style = SpanStyle(color = color)) {
+                                append(char)
+                            }
+                        }
+                    }
+                },
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.End,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 12.dp)
@@ -370,7 +664,7 @@ fun CalculatorScreen() {
                 colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFF7AE142)),
                 modifier = Modifier
                     .size(24.dp)
-                    .clickable { /* Acción borrar */ }
+                    .clickable { handleButtonClick("backspace") }
             )
         }
 
@@ -392,33 +686,38 @@ fun CalculatorScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                CalculatorButton("C", Color(0xFFE55541), Color.White, 36.dp, 24.dp)
-                CalculatorButton("1/2", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
-                CalculatorButton("÷", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
-                CalculatorButton("×", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
+                CalculatorButton("C", Color(0xFFE55541), Color.White, 36.dp, 24.dp) { handleButtonClick("C") }
+                val pageLabel = if (isPage2) "2/2" else "1/2"
+                CalculatorButton(pageLabel, Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp) { handleButtonClick(pageLabel) }
+                val divOp = if (isPage2) "()" else "÷"
+                CalculatorButton(divOp, Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp) { handleButtonClick(divOp) }
+                val multOp = if (isPage2) "%" else "×"
+                CalculatorButton(multOp, Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp) { handleButtonClick(multOp) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                CalculatorButton("7", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("8", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("9", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("-", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
+                CalculatorButton("7", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("7") }
+                CalculatorButton("8", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("8") }
+                CalculatorButton("9", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("9") }
+                val minusOp = if (isPage2) "+/-" else "-"
+                CalculatorButton(minusOp, Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp) { handleButtonClick(minusOp) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                CalculatorButton("4", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("5", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("6", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("+", Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp)
+                CalculatorButton("4", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("4") }
+                CalculatorButton("5", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("5") }
+                CalculatorButton("6", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("6") }
+                val plusOp = if (isPage2) "√" else "+"
+                CalculatorButton(plusOp, Color(0xFF333333), Color(0xFF7AE142), 36.dp, 24.dp) { handleButtonClick(plusOp) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                CalculatorButton("1", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("2", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("3", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton("=", Color(0xFF388E3C), Color.White, 36.dp, 24.dp)
+                CalculatorButton("1", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("1") }
+                CalculatorButton("2", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("2") }
+                CalculatorButton("3", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("3") }
+                CalculatorButton("=", Color(0xFF388E3C), Color.White, 36.dp, 24.dp) { handleButtonClick("=") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Spacer(modifier = Modifier.width(36.dp))
-                CalculatorButton("0", Color(0xFF181818), Color.White, 36.dp, 24.dp)
-                CalculatorButton(".", Color(0xFF181818), Color.White, 36.dp, 24.dp)
+                CalculatorButton("0", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick("0") }
+                CalculatorButton(".", Color(0xFF181818), Color.White, 36.dp, 24.dp) { handleButtonClick(".") }
                 Spacer(modifier = Modifier.width(36.dp))
             }
         }
@@ -431,7 +730,8 @@ fun CalculatorButton(
     backgroundColor: Color,
     textColor: Color,
     width: Dp,
-    height: Dp
+    height: Dp,
+    onClick: () -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.Center,
@@ -440,12 +740,12 @@ fun CalculatorButton(
             .size(width = width, height = height)
             .clip(RoundedCornerShape(percent = 50)) // Forma de píldora
             .background(backgroundColor)
-            .clickable { /* Acción del número/operador */ }
+            .clickable { onClick() }
     ) {
         Text(
             text = text,
             color = textColor,
-            fontSize = if (text == "1/2") 13.sp else 18.sp,
+            fontSize = if (text == "1/2" || text == "2/2" || text == "+/-") 13.sp else 18.sp,
             fontWeight = FontWeight.Medium
         )
     }
